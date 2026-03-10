@@ -5,93 +5,9 @@ namespace App\Classes;
 class ChallengeGenerator
 {
     private array $words = [
-        'country' => [
-            'Philippines',
-            'Thailand',
-            'Japan',
-            'Indonesia',
-            'Singapore',
-            'Brazil',
-            'Canada',
-            'Australia',
-            'Egypt',
-            'Germany',
-            'Mexico',
-            'France',
-            'Italy',
-            'Spain',
-            'Argentina'
-        ],
-        'cities' => [
-            'Manila',
-            'Bangkok',
-            'Tokyo',
-            'Jakarta',
-            'Singapore',
-            'London',
-            'Paris',
-            'Sydney',
-            'Rome',
-            'Berlin',
-            'Seoul',
-            'Beijing',
-            'Amsterdam',
-            'Toronto',
-            'Dubai'
-        ],
-        'colors' => [
-            'Red',
-            'Blue',
-            'Green',
-            'Yellow',
-            'Black',
-            'Orange',
-            'Purple',
-            'Pink',
-            'Brown',
-            'White',
-            'Cyan',
-            'Magenta',
-            'Maroon',
-            'Turquoise',
-            'Indigo'
-        ],
-        'animals' => [
-            'Elephant',
-            'Tiger',
-            'Dolphin',
-            'Giraffe',
-            'Penguin',
-            'Kangaroo',
-            'Cheetah',
-            'Gorilla',
-            'Octopus',
-            'Rhinoceros'
-        ],
-        'fruits' => [
-            'Apple',
-            'Banana',
-            'Mango',
-            'Orange',
-            'Strawberry',
-            'Watermelon',
-            'Pineapple',
-            'Grapes',
-            'Avocado',
-            'Blueberry'
-        ],
-        'programming' => [
-            'Laravel',
-            'Python',
-            'Javascript',
-            'Database',
-            'Server',
-            'Framework',
-            'Variable',
-            'Function',
-            'Boolean',
-            'Compiler'
-        ]
+        'animals' => ['HORSE', 'SHEEP', 'RABBIT', 'DONKEY', 'GIRAFFE', 'TIGER', 'PANDA', 'ZEBRA', 'ELEPHANT', 'MONKEY'],
+        'countries' => ['CANADA', 'JAPAN', 'BRAZIL', 'FRANCE', 'GERMANY', 'INDIA', 'CHINA', 'EGYPT', 'SPAIN', 'ITALY'],
+        'programming_languages' => ['JAVASCRIPT', 'PYTHON', 'SWIFT', 'KOTLIN', 'CSHARP', 'GOLANG', 'SCALA', 'ELIXIR', 'HASKELL', 'OBJECTIVEC'],
     ];
 
     public function getCategories(): array

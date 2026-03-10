@@ -1,49 +1,41 @@
-<x-app title="Current Game">
-    <h1>Hangman Game</h1>
+<x-app>
+    <x-slot:title>
+        {{ ucwords(str_replace('_', ' ', $game->category)) }}
+    </x-slot:title>
 
-    @php
-        $isGameOver = $game->isCompleted() || $game->isFailed();
-    @endphp
 
-    <div>
-        Category: {{ $game->category }}
-    </div>
-    <div>
-        Lives Remaining: {{ $game->lives }}
-    </div>
-
-    <div style="font-size:30px; margin:20px 0;">
-        {{ $game }}
-    </div>
-
-    {{-- Win / Loss Messages --}}
-    @if ($isGameOver)
-        <div style="margin-bottom: 20px;">
-            @if ($game->isCompleted())
-                <h2 style="color: green;">Congratulations, you won!</h2>
-            @else
-                <h2 style="color: red;">Game Over! The word was: {{ $game->word }}</h2>
-            @endif
-        </div>
+    @if ($game->isCompleted())
+        <div>Congratulations!</div>
+    @elseif ($game->isFailed())
+        <div>You failed! The word we are looking for is {{ $game->word }}</div>
     @endif
 
-    {{-- The component class handles the $keygroups internally now --}}
-    <x-keyboard :game="$game" :isGameOver="$isGameOver" />
+    <div>
+        Category: {{ ucwords(str_replace('_', ' ', $game->category)) }}
+    </div>
+    <div>
+        Remaining Lives: {{ $game->lives }}
+    </div>
+    <div>
+        {{ $game }}
+    </div>
+    <br />
+    <div>
+        <form method="post" action="{{ route('game.update') }}">
+            @method('put')
+            @csrf
 
-    {{-- Action Buttons --}}
-    <div style="margin-top: 20px;">
-        @if ($isGameOver)
-            <form method="post" action="{{ route('game.reset') }}">
-                @method('PUT')
-                @csrf
-                <button type="submit" style="padding: 10px 20px; cursor: pointer;">Next Game</button>
-            </form>
-        @else
-            <form method="post" action="{{ route('game.skip') }}">
-                @method('PUT')
-                @csrf
-                <button type="submit" style="padding: 10px 20px; cursor: pointer; color: red;">Skip Game</button>
-            </form>
-        @endif
+            <x-keyboard :disabled-keys="$disabledKeys" />
+
+            @if (!$game->isOver())
+                <div>
+                    <button type="submit" name="skip" value=true>
+                        Skip Challenge
+                    </button>
+                </div>
+            @else
+                <a href="{{ route('game.show') }}">Next Challenge</a>
+            @endif
+        </form>
     </div>
 </x-app>
