@@ -1,47 +1,38 @@
 <?php
 
+use App\Classes\ChallengeGenerator;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Classes\ChallengeGenerator;
 
-Route::get('/', function (Request $request, ChallengeGenerator $challengeGenerator) {
-    if ($request->session()->has('game')) {
+Route::name("game.")->group(function () {
+    Route::get('/game', function (Request $request, ChallengeGenerator $challengeGenerator) {
+        if ($request->session()->exists('game')) {
+            $game = $request->session()->get('game');
+        } else {
+            $game = $challengeGenerator->generate();
+            $request->session()->put('game', $game);
+        }
+
+        if ($game->isOver()) {
+            $request->session()->forget('game');
+        }
+
+        $disabledKeys = $game->isOver() ? true : $game->getGuesses();
+
+        return view('game.show', compact('game', 'disabledKeys'));
+    })->name('show');
+
+    Route::put('/game', function (Request $request) {
         $game = $request->session()->get('game');
-    } else {
-        $game = $challengeGenerator->generate();
-        $request->session()->put('game', $game);
-    }
 
-    // FIXED: Removed 'keygroups' from compact()
-    return view('game.show', compact('game'));
-})->name('game.show');
+        $skip = $request->input('skip', false);
+        if ($skip) {
+            $game->skip();
+        } else {
+            $guess = $request->input('guess');
+            $game->guess($guess);
+        }
 
-Route::put('/guess', function (Request $request) {
-    $guess = strtoupper($request->input('guess'));
-    $game = $request->session()->get('game');
-
-    if ($game) {
-        $game->guess($guess);
-        $request->session()->put('game', $game);
-    }
-
-    return redirect()->route('game.show');
-})->name('game.update');
-
-Route::put('/skip', function (Request $request) {
-    $game = $request->session()->get('game');
-
-    if ($game) {
-        $game->skip();
-        $request->session()->put('game', $game);
-    }
-
-    return redirect()->route('game.show');
-})->name('game.skip');
-
-Route::put('/reset', function (Request $request, ChallengeGenerator $challengeGenerator) {
-    $game = $challengeGenerator->generate();
-    $request->session()->put('game', $game);
-
-    return redirect()->route('game.show');
-})->name('game.reset');
+        return redirect()->route('game.show');
+    })->name('update');
+});

@@ -1,15 +1,13 @@
-<form method="post" action="{{ route('game.update') }}">
-    @method('PUT')
-    @csrf
-
-    @foreach ($keygroups as $keys)
-        <div style="margin-bottom:10px;">
+<div>
+    @foreach($keygroups as $keys)
+        <div>
             @foreach ($keys as $key)
                 <button type="submit" name="guess" value="{{ $key }}"
-                    @if (in_array($key, $game->getUsedLetters()) || $isGameOver) disabled @endif>
+                    @disabled(is_array($disabledKeys)? in_array($key,$disabledKeys) : $disabledKeys )
+                >
                     {{ $key }}
                 </button>
             @endforeach
         </div>
-    @endforeach
-</form>
+    @endforeach    
+</div>

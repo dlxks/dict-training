@@ -10,11 +10,11 @@ class App extends Component
 {
     /**
      * Create a new component instance.
-     * Add $title property with a default fallback.
      */
-    public function __construct(
-        public string $title = 'Play'
-    ) {}
+    public function __construct()
+    {
+        //
+    }
 
     /**
      * Get the view / contents that represent the component.
