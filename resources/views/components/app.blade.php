@@ -6,27 +6,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ config('app.name', 'Hangman') }} - {{ $title }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .manga-bg {
+            background-color: #e5e7eb;
+            background-image: radial-gradient(#000 0.5px, transparent 0.5px);
+            background-size: 10px 10px;
+        }
+    </style>
 </head>
 
-<body class="bg-sky-300 text-black font-sans antialiased min-h-screen selection:bg-yellow-300 relative">
-
+<body class="manga-bg text-black font-sans antialiased min-h-screen selection:bg-yellow-300">
     @auth
-        <div class="max-w-4xl mx-auto flex justify-end items-center gap-4 pt-6 px-4 sm:px-6 lg:px-8 z-50">
+        <div class="max-w-md mx-auto flex justify-between items-center gap-2 pt-2 px-2 z-50">
             <span
-                class="font-black uppercase tracking-wider bg-white px-3 py-1 border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transform rotate-1 hidden sm:inline-block">
-                Hi, {{ auth()->user()->name }}!
+                class="font-black uppercase text-[10px] bg-white px-2 py-0.5 border-2 border-black rounded shadow-[2px_2px_0_0_#000]">
+                ID: {{ auth()->user()->name }}
             </span>
             <form action="{{ route('auth.logout') }}" method="POST">
                 @csrf
                 <button type="submit"
-                    class="bg-red-400 hover:bg-red-500 text-black border-2 border-black font-black uppercase py-1 px-3 rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-0.5 active:translate-x-0.5 transition-all text-sm transform -rotate-2">
-                    Logout
+                    class="bg-white border-2 border-black font-black uppercase py-0.5 px-2 rounded text-[10px] shadow-[2px_2px_0_0_#000] active:translate-y-0.5">
+                    EXIT
                 </button>
             </form>
         </div>
     @endauth
 
-    <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8 mt-4 sm:mt-0">
+    <div class="max-w-md mx-auto py-4 px-2">
         {{ $slot }}
     </div>
 </body>

@@ -5,115 +5,146 @@ namespace App\Http\Controllers;
 use App\Classes\ChallengeGenerator;
 use App\Http\Requests\StoreGameRequest;
 use App\Http\Requests\UpdateGameRequest;
+use App\Models\Challenge;
+use App\Models\Game;
+use App\Models\Player;
+use App\Models\Stage;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class GameController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $games = $request->session()->get('games', []);
+        $games = $request->user()->games()->get();
 
-        return view('games.index', compact('games'));
+        $viewGames = [];
+        foreach ($games as $game) {
+            // Retrieve the specific player instance for this user
+            $player = Player::where('game_id', $game->id)->where('user_id', $request->user()->id)->first();
+
+            // Get the active stage (challenge)
+            $stage = Stage::where('player_id', $player->id)->latest()->first();
+
+            if ($stage) {
+                $viewGames[$game->id] = [
+                    'name' => $game->name,
+                    'challenge' => $stage,
+                ];
+            }
+        }
+
+        return view('games.index', ['games' => $viewGames]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('games.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreGameRequest $request, ChallengeGenerator $challengeGenerator)
     {
-        $games = $request->session()->get('games', []);
-
         $data = $request->safe()->only('name');
+        $user = $request->user();
 
-        $id = Str::uuid()->toString();
-
-        $games[$id] = [
+        // 1. Create Game
+        $game = Game::create([
             'name' => $data['name'],
-            'challenge' => $challengeGenerator->generate()
-        ];
+            'starting_lives' => 6,
+            'user_id' => $user->id,
+        ]);
 
-        $request->session()->put('games', $games);
+        // 2. Create Player Pivot
+        $player = Player::create([
+            'game_id' => $game->id,
+            'user_id' => $user->id,
+            'is_active' => true,
+        ]);
+
+        // 3. Create initial Dictionary Challenge
+        $challengeData = $challengeGenerator->generate();
+        $challenge = Challenge::create([
+            'category' => $challengeData->category,
+            'word' => $challengeData->word,
+        ]);
+
+        // 4. Bind them together into an active Stage
+        Stage::create([
+            'player_id' => $player->id,
+            'challenge_id' => $challenge->id,
+            'guesses' => [],
+            'correct_guesses' => [],
+        ]);
 
         return redirect()->route('games.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Request $request, string $id)
     {
-        $games = $request->session()->get('games', []);
+        $game = Game::findOrFail($id);
+        $user = $request->user();
 
-        if (!isset($games[$id])) {
-            abort(404, 'Game not found.');
-        }
+        $player = Player::where('game_id', $game->id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
 
-        $gameData = $games[$id];
-        $game = $gameData['challenge'];
+        $stage = Stage::where('player_id', $player->id)
+            ->with('challenge')
+            ->latest()
+            ->firstOrFail();
 
-        $disabledKeys = $game->isOver() ? true : $game->getGuesses();
+        $disabledKeys = $stage->isOver() ? true : $stage->getGuesses();
+        $gameData = ['name' => $game->name];
 
-        return view('game.show', compact('game', 'disabledKeys', 'id', 'gameData'));
+        return view('game.show', [
+            'game' => $stage, // Pass the active stage as $game for view compatibility
+            'disabledKeys' => $disabledKeys,
+            'id' => $id,
+            'gameData' => $gameData,
+        ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(UpdateGameRequest $request, string $id, ChallengeGenerator $challengeGenerator)
     {
-        // Not Implemented
-    }
+        $game = Game::findOrFail($id);
+        $user = $request->user();
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateGameRequest $request, string $id)
-    {
-        $games = $request->session()->get('games', []);
+        $player = Player::where('game_id', $game->id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
 
-        if (!isset($games[$id])) {
-            abort(404, 'Game not found.');
-        }
-
-        $game = $games[$id]['challenge'];
+        $stage = Stage::where('player_id', $player->id)
+            ->latest()
+            ->firstOrFail();
 
         $skip = $request->input('skip', false);
         $next = $request->input('next', false);
 
-        if ($next && $game->isOver()) {
-            $games[$id]['challenge'] = app(\App\Classes\ChallengeGenerator::class)->generate();
+        if ($next && $stage->isOver()) {
+            $challengeData = $challengeGenerator->generate();
+            $challenge = Challenge::create([
+                'category' => $challengeData->category,
+                'word' => $challengeData->word,
+            ]);
+
+            Stage::create([
+                'player_id' => $player->id,
+                'challenge_id' => $challenge->id,
+                'guesses' => [],
+                'correct_guesses' => [],
+            ]);
         } elseif ($skip) {
-            $game->skip();
+            $stage->skip();
         } else {
-            // Because of UpdateGameRequest, we know 'guess' is safe and not duplicated
             $guess = $request->input('guess');
             if ($guess) {
-                $game->guess(strtoupper($guess));
+                $stage->guess($guess);
             }
         }
-
-        $request->session()->put('games', $games);
 
         return redirect()->route('games.show', ['id' => $id]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
+    public function edit(string $id) {}
+
+    public function destroy(string $id) {}
 }

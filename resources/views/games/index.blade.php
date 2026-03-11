@@ -1,56 +1,55 @@
+
 <x-app>
     <x-slot:title>My Games</x-slot:title>
 
-    <div
-        class="flex justify-between items-center mb-8 bg-white border-4 border-black p-4 rounded-xl shadow-[6px_6px_0_0_rgba(0,0,0,1)] transform -rotate-1">
-        <h1 class="text-3xl font-black uppercase">My Games</h1>
+    <div class="flex justify-between items-center mb-4 bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000]">
+        <h1 class="text-xl font-black uppercase italic">Game Logs</h1>
         <a href="{{ route('games.create') }}"
-            class="bg-blue-400 border-4 border-black text-black px-4 py-2 rounded-xl text-lg font-black uppercase transition-transform hover:-translate-y-1 hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none">
-            + NEW GAME
+            class="bg-black text-white px-3 py-1 text-xs font-black uppercase transition-transform active:translate-y-0.5">
+            + New
         </a>
     </div>
 
     @if (empty($games))
-        <div class="bg-white border-4 border-black rounded-xl p-10 text-center shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
-            <h3 class="text-2xl font-black uppercase mb-2 text-red-500">ZOINKS!</h3>
-            <p class="text-xl font-bold mb-6">You don't have any games right now!</p>
+        <div class="bg-white border-[3px] border-black p-8 text-center shadow-[4px_4px_0_0_#000]">
+            <h3 class="text-lg font-black uppercase text-red-500 mb-1">Empty!</h3>
+            <p class="text-xs font-bold mb-4 uppercase">No active operations found.</p>
             <a href="{{ route('games.create') }}"
-                class="text-xl bg-green-400 border-4 border-black px-6 py-3 rounded-full font-black uppercase hover:-translate-y-1 hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] transition-all inline-block">
-                START PLAYING! &rarr;
+                class="text-sm bg-yellow-300 border-2 border-black px-4 py-2 font-black uppercase inline-block">
+                Initialize &rarr;
             </a>
         </div>
     @else
-        <div class="grid gap-6">
+        <div class="grid gap-3">
             @foreach ($games as $id => $gameData)
                 <div
-                    class="bg-white border-4 border-black rounded-2xl p-6 shadow-[6px_6px_0_0_rgba(0,0,0,1)] transition-transform hover:-translate-y-1 hover:rotate-1 group relative overflow-hidden">
-                    <div
-                        class="absolute -right-10 -top-10 w-32 h-32 bg-yellow-200 rounded-full border-4 border-black opacity-50 z-0">
+                    class="bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000] relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-12 h-12 border-2 border-black rotate-12 opacity-10 bg-black">
                     </div>
 
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center relative z-10">
-                        <div class="mb-4 sm:mb-0">
-                            <h2 class="text-2xl font-black uppercase group-hover:text-blue-600 transition-colors">
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <h2 class="text-lg font-black uppercase truncate italic">
                                 <a href="{{ route('games.show', $id) }}">{{ $gameData['name'] }}</a>
                             </h2>
-                            <div class="mt-2 flex items-center gap-2">
+                            <div class="flex items-center gap-2 mt-1">
                                 @if ($gameData['challenge']->isCompleted())
                                     <span
-                                        class="bg-green-400 border-2 border-black text-black px-3 py-1 rounded-full text-sm font-black uppercase">WINNER!</span>
+                                        class="bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase">Cleared</span>
                                 @elseif($gameData['challenge']->isFailed())
                                     <span
-                                        class="bg-red-400 border-2 border-black text-black px-3 py-1 rounded-full text-sm font-black uppercase">K.O.</span>
+                                        class="bg-white border border-black px-2 py-0.5 text-[10px] font-black uppercase">Failed</span>
                                 @else
                                     <span
-                                        class="bg-blue-300 border-2 border-black text-black px-3 py-1 rounded-full text-sm font-black uppercase">PLAYING</span>
-                                    <span class="text-sm font-bold ml-2">❤️ {{ $gameData['challenge']->lives }}
-                                        LIVES</span>
+                                        class="bg-yellow-300 border border-black px-2 py-0.5 text-[10px] font-black uppercase">Active</span>
+                                    <span class="text-[10px] font-black tracking-tighter">HP:
+                                        {{ $gameData['challenge']->lives }}</span>
                                 @endif
                             </div>
                         </div>
                         <a href="{{ route('games.show', $id) }}"
-                            class="bg-pink-400 border-4 border-black px-6 py-2 rounded-xl text-lg font-black uppercase transition-all hover:-translate-y-1 hover:shadow-[4px_4px_0_0_rgba(0,0,0,1)] active:translate-y-1 active:shadow-none w-full sm:w-auto text-center">
-                            PLAY!
+                            class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5">
+                            Play
                         </a>
                     </div>
                 </div>

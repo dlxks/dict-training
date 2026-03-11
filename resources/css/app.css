@@ -48,3 +48,57 @@
     --depth: 0;
     --noise: 1;
 }
+
+/* Screentone (Halftone) Patterns */
+.bg-halftone {
+    position: relative;
+    background-color: #ffffff;
+}
+
+.bg-halftone::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.15; /* Adjust for subtleness */
+    pointer-events: none;
+    background-image: radial-gradient(#000 1px, transparent 0);
+    background-size: 4px 4px; /* Tight manga grid */
+}
+
+/* Diagonal Manga Lines for emphasis */
+.bg-manga-speed {
+    background: repeating-linear-gradient(
+        45deg,
+        #f3f4f6,
+        #f3f4f6 10px,
+        #e5e7eb 10px,
+        #e5e7eb 11px
+    );
+}
+
+/* Button Texture */
+.btn-screentone {
+    background-image: radial-gradient(circle, #000 10%, transparent 11%);
+    background-size: 3px 3px;
+    background-color: #fff;
+}
+
+/* BAM! Impact Animation */
+@keyframes critical-hit {
+    0% { transform: scale(1); filter: brightness(1); }
+    10% { transform: scale(1.1) rotate(-2deg); filter: brightness(2); }
+    20% { transform: scale(0.95) rotate(2deg); }
+    30% { transform: scale(1.05); }
+    100% { transform: scale(1); filter: brightness(1); }
+}
+
+.animate-critical {
+    animation: critical-hit 0.4s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+/* Manga "Impact" Text */
+.impact-text {
+    font-family: 'Impact', sans-serif;
+    text-shadow: 3px 3px 0 #000;
+    -webkit-text-stroke: 1px black;
+}
