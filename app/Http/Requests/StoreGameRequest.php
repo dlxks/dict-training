@@ -24,13 +24,27 @@ class StoreGameRequest extends FormRequest
     {
         $games = session()->get('games', []);
 
-        $names = array_map(fn($game) => $game['name'], $games);
+        $names = array_map(fn ($game) => $game['name'], $games);
 
         return [
             'name' => [
                 'required',
-                Rule::notIn($names)
-            ]
+                'string',
+                'max:30',
+                Rule::unique('games', 'name'),
+            ],
+            'starting_lives' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:10',
+            ],
+            'duration' => [
+                'required',
+                'integer',
+                'min:5',
+                'max:60',
+            ],
         ];
     }
 
@@ -38,14 +52,20 @@ class StoreGameRequest extends FormRequest
     {
         return [
             'required' => 'The :attribute is required.',
-            'name.not_in' => 'The :attribute is already taken'
+            'name.unique' => 'The :attribute is already taken.',
+            'starting_lives.min' => 'The :attribute must be at least :min.',
+            'starting_lives.max' => 'The :attribute must be at most :max.',
+            'duration.min' => 'The :attribute must be at least :min seconds.',
+            'duration.max' => 'The :attribute must be at most :max seconds.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'name' => 'game name'
+            'name' => 'game name',
+            'starting_lives' => 'starting lives',
+            'duration' => 'duration per challenge',
         ];
     }
 }
