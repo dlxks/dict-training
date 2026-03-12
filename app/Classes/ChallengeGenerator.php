@@ -36,7 +36,7 @@ class ChallengeGenerator
             'HYENA',
             'IGUANA',
             'JAGUAR',
-            'LEMUR'
+            'LEMUR',
         ],
 
         'countries' => [
@@ -69,7 +69,7 @@ class ChallengeGenerator
             'TURKEY',
             'PAKISTAN',
             'BANGLADESH',
-            'SOUTHAFRICA'
+            'SOUTHAFRICA',
         ],
 
         'cities' => [
@@ -97,7 +97,7 @@ class ChallengeGenerator
             'DOHA',
             'RIYADH',
             'ISTANBUL',
-            'MOSCOW'
+            'MOSCOW',
         ],
 
         'colors' => [
@@ -120,8 +120,8 @@ class ChallengeGenerator
             'BEIGE',
             'GOLD',
             'SILVER',
-            'BRONZE'
-        ]
+            'BRONZE',
+        ],
 
     ];
 
@@ -132,6 +132,30 @@ class ChallengeGenerator
 
     public function generate(): Challenge
     {
+        $categories = ['countries', 'sports', 'capitals_of_countries', 'animals', 'birds'];
+        $category = $categories[array_rand($categories)];
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get('https://random-words-api.kushcreates.com/api', [
+                'language' => 'en',
+                'category' => $category,
+                'type' => 'uppercase',
+                'words' => 1,
+            ]);
+            if ($response->successful()) {
+                $data = $response->json();
+                if (! empty($data) && is_array($data[0])) {
+                    $word = strtoupper($data[0]['word'] ?? $data[0][0] ?? '');
+                    if ($word) {
+                        return new Challenge($category, $word);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // API fail, fallback
+        }
+
+        // Fallback to local sets
         $category = array_rand($this->words);
         $word = $this->words[$category][array_rand($this->words[$category])];
 
