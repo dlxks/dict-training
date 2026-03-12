@@ -111,7 +111,7 @@
                 @if ($isLimitReached)
                     <div
                         class="w-full py-3 bg-green-500 text-white border-[3px] border-black font-black uppercase text-lg text-center shadow-[4px_4px_0_0_#ccc]">
-                        Game Complete! {{ $playerStageCount }} / {{ $numWords }} words guessed.
+                        Game Complete! {{ $correctlyGuessed }} / {{ $numWords }} correctly guessed.
                     </div>
                 @else
                     <div class="mt-4 flex flex-col gap-2">

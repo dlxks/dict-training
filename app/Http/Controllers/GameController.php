@@ -202,6 +202,7 @@ class GameController extends Controller
             'otherPlayersStages' => $otherPlayersStages,
             'currentChallenge' => $currentChallenge,
             'playerStageCount' => $player ? Stage::where('player_id', $player->id)->count() : 0,
+            'correctlyGuessed' => $player ? Stage::where('player_id', $player->id)->where('is_completed', 1)->where('skipped', 0)->count() : 0,
             'numWords' => $game->num_words ?? 10,
             'isLimitReached' => $player ? Stage::where('player_id', $player->id)->count() >= ($game->num_words ?? 999) : false,
         ]);
