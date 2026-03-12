@@ -54,6 +54,17 @@
                 @enderror
             </div>
 
+            <div class="mb-6">
+                <label for="num_words" class="block text-xs font-black uppercase mb-1">Number of Words:</label>
+                <input type="number" name="num_words" id="num_words" min="1" max="100" value="10"
+                    required
+                    class="w-full bg-white border-[3px] border-black px-3 py-2 text-sm font-black focus:bg-yellow-50 outline-none" />
+                @error('num_words')
+                    <p class="text-white bg-black text-[10px] font-black uppercase mt-1 px-1 inline-block">
+                        {{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="flex flex-col gap-2">
                 <button type="submit"
                     class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-sm shadow-[4px_4px_0_0_#ccc] active:translate-y-0.5">

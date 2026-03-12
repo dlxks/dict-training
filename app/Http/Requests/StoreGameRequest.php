@@ -45,6 +45,12 @@ class StoreGameRequest extends FormRequest
                 'min:5',
                 'max:60',
             ],
+            'num_words' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
         ];
     }
 
@@ -57,6 +63,8 @@ class StoreGameRequest extends FormRequest
             'starting_lives.max' => 'The :attribute must be at most :max.',
             'duration.min' => 'The :attribute must be at least :min seconds.',
             'duration.max' => 'The :attribute must be at most :max seconds.',
+            'num_words.min' => 'The :attribute must be at least :min.',
+            'num_words.max' => 'The :attribute must be at most :max.',
         ];
     }
 

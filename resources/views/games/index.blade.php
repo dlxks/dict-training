@@ -38,6 +38,11 @@
                                 <a href="{{ route('games.show', $id) }}">{{ $gameData['name'] }}</a>
                             </h2>
                             <div class="flex items-center gap-2 mt-1">
+                                @if (isset($gameData['stage_count']))
+                                    <span class="text-[10px] font-black tracking-tighter">
+                                        {{ $gameData['stage_count'] }} / {{ $gameData['num_words'] ?? '∞' }} words
+                                    </span>
+                                @endif
                                 @if ($gameData['challenge']->isCompleted())
                                     <span
                                         class="bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase">Cleared</span>

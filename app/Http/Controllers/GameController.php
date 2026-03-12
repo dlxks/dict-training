@@ -23,13 +23,17 @@ class GameController extends Controller
             // Retrieve the specific player instance for this user
             $player = Player::where('game_id', $game->id)->where('user_id', $request->user()->id)->first();
 
+            $stageCount = $player ? Stage::where('player_id', $player->id)->count() : 0;
+
             // Get the active stage (challenge)
             $stage = Stage::where('player_id', $player->id)->latest()->first();
 
-            if ($stage) {
+            if ($stage || $stageCount > 0) {
                 $viewGames[$game->id] = [
                     'name' => $game->name,
                     'challenge' => $stage,
+                    'num_words' => $game->num_words,
+                    'stage_count' => $stageCount,
                 ];
             }
         }
@@ -44,7 +48,7 @@ class GameController extends Controller
 
     public function store(StoreGameRequest $request, ChallengeGenerator $challengeGenerator)
     {
-        $data = $request->safe()->only(['name', 'starting_lives', 'duration']);
+        $data = $request->safe()->only(['name', 'starting_lives', 'duration', 'num_words']);
         $user = $request->user();
 
         // 1. Create Game
@@ -52,6 +56,7 @@ class GameController extends Controller
             'name' => $data['name'],
             'starting_lives' => $data['starting_lives'],
             'duration' => $data['duration'],
+            'num_words' => $data['num_words'],
             'user_id' => $user->id,
         ]);
 
@@ -177,7 +182,7 @@ class GameController extends Controller
                 ->latest()
                 ->get()
                 ->groupBy('player_id')
-                ->map(fn($stages) => $stages->first());
+                ->map(fn ($stages) => $stages->first());
         }
 
         $currentChallenge = $game->currentChallenge;
@@ -196,6 +201,9 @@ class GameController extends Controller
             'timeLeft' => $timeLeft,
             'otherPlayersStages' => $otherPlayersStages,
             'currentChallenge' => $currentChallenge,
+            'playerStageCount' => $player ? Stage::where('player_id', $player->id)->count() : 0,
+            'numWords' => $game->num_words ?? 10,
+            'isLimitReached' => $player ? Stage::where('player_id', $player->id)->count() >= ($game->num_words ?? 999) : false,
         ]);
     }
 
@@ -230,7 +238,7 @@ class GameController extends Controller
                 ->latest()
                 ->get()
                 ->groupBy('player_id')
-                ->map(fn($stages) => $stages->first());
+                ->map(fn ($stages) => $stages->first());
         }
 
         $currentChallenge = $game->currentChallenge;
@@ -250,6 +258,9 @@ class GameController extends Controller
             'otherPlayersStages' => $otherPlayersStages,
             'pureSpectator' => $pureSpectator,
             'currentChallenge' => $currentChallenge,
+            'playerStageCount' => 0,
+            'numWords' => $game->num_words ?? 10,
+            'isLimitReached' => false,
         ]);
     }
 
@@ -280,6 +291,9 @@ class GameController extends Controller
         }
 
         if ($next && $stage->isOver()) {
+            if (Stage::where('player_id', $player->id)->count() >= $game->num_words) {
+                return redirect()->route('games.show', $id)->with('info', 'You have completed all '.$game->num_words.' words!');
+            }
             $challengeData = $challengeGenerator->generate();
             $challenge = Challenge::create([
                 'category' => $challengeData->category,

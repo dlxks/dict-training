@@ -108,20 +108,27 @@
                     <x-keyboard :disabled-keys="$disabledKeys" />
                 </div>
 
-                <div class="mt-4 flex flex-col gap-2">
-                    @if (!$game->isOver())
-                        <button type="submit" name="skip" value="1"
-                            class="text-xs font-black uppercase underline decoration-2 underline-offset-2">
-                            Skip Round >>
-                        </button>
-                    @endif
-                    @if ($game->isOver())
-                        <button type="submit" name="next" value="1"
-                            class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-lg shadow-[4px_4px_0_0_#ccc] active:translate-y-1">
-                            NEXT CHALLENGE!
-                        </button>
-                    @endif
-                </div>
+                @if ($isLimitReached)
+                    <div
+                        class="w-full py-3 bg-green-500 text-white border-[3px] border-black font-black uppercase text-lg text-center shadow-[4px_4px_0_0_#ccc]">
+                        Game Complete! {{ $playerStageCount }} / {{ $numWords }} words guessed.
+                    </div>
+                @else
+                    <div class="mt-4 flex flex-col gap-2">
+                        @if (!$game->isOver())
+                            <button type="submit" name="skip" value="1"
+                                class="text-xs font-black uppercase underline decoration-2 underline-offset-2">
+                                Skip Round >>
+                            </button>
+                        @endif
+                        @if ($game->isOver())
+                            <button type="submit" name="next" value="1"
+                                class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-lg shadow-[4px_4px_0_0_#ccc] active:translate-y-1">
+                                NEXT CHALLENGE! {{ $playerStageCount + 1 }} / {{ $numWords }}
+                            </button>
+                        @endif
+                    </div>
+                @endif
             </form>
         @endif
 

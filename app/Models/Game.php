@@ -15,7 +15,7 @@ class Game extends Model
 
     public $incrementing = false;
 
-    protected $fillable = ['name', 'starting_lives', 'duration', 'user_id', 'current_challenge_id'];
+    protected $fillable = ['name', 'starting_lives', 'duration', 'num_words', 'user_id', 'current_challenge_id'];
 
     public function creator(): BelongsTo
     {
