@@ -114,24 +114,12 @@
                             class="text-xs font-black uppercase underline decoration-2 underline-offset-2">
                             Skip Round >>
                         </button>
-                    @else
-                        @php
-                            $allStagesForChallenge = $otherPlayersStages;
-                            $allCompleted = $allStagesForChallenge->every(function ($s) {
-                                return $s->isOver();
-                            });
-                        @endphp
-                        @if ($allCompleted)
-                            <button type="submit" name="next" value="1"
-                                class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-lg shadow-[4px_4px_0_0_#ccc] active:translate-y-1">
-                                NEXT CHALLENGE!
-                            </button>
-                        @else
-                            <div
-                                class="w-full py-3 bg-gray-300 text-gray-600 border-[3px] border-gray-500 font-black uppercase text-lg text-center">
-                                Waiting for other players...
-                            </div>
-                        @endif
+                    @endif
+                    @if ($game->isOver())
+                        <button type="submit" name="next" value="1"
+                            class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-lg shadow-[4px_4px_0_0_#ccc] active:translate-y-1">
+                            NEXT CHALLENGE!
+                        </button>
                     @endif
                 </div>
             </form>

@@ -100,10 +100,14 @@ class GameController extends Controller
             'score' => 0,
         ]);
 
-        // Join the current game challenge
+        $challengeData = $challengeGenerator->generate();
+        $challenge = Challenge::create([
+            'category' => $challengeData->category,
+            'word' => $challengeData->word,
+        ]);
         Stage::create([
             'player_id' => $player->id,
-            'challenge_id' => $game->current_challenge_id,
+            'challenge_id' => $challenge->id,
             'guesses' => [],
             'correct_guesses' => [],
             'started_at' => now(),
@@ -160,11 +164,20 @@ class GameController extends Controller
             ->orderByDesc('score')
             ->get();
 
-        $otherPlayersStages = [];
-        if ($game->current_challenge_id) {
-            $otherPlayersStages = Stage::where('challenge_id', $game->current_challenge_id)
+        $otherPlayerIds = Player::where('game_id', $game->id)
+            ->where('user_id', '!=', $user->id)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        $otherPlayersStages = collect();
+
+        if ($otherPlayerIds->isNotEmpty()) {
+            $otherPlayersStages = Stage::whereIn('player_id', $otherPlayerIds)
                 ->with(['player.user'])
-                ->get();
+                ->latest()
+                ->get()
+                ->groupBy('player_id')
+                ->map(fn($stages) => $stages->first());
         }
 
         $currentChallenge = $game->currentChallenge;
@@ -204,11 +217,20 @@ class GameController extends Controller
             ->orderByDesc('score')
             ->get();
 
-        $otherPlayersStages = [];
-        if ($game->current_challenge_id) {
-            $otherPlayersStages = Stage::where('challenge_id', $game->current_challenge_id)
+        $otherPlayerIds = Player::where('game_id', $game->id)
+            ->where('user_id', '!=', $request->user()->id)
+            ->where('is_active', true)
+            ->pluck('id');
+
+        $otherPlayersStages = collect();
+
+        if ($otherPlayerIds->isNotEmpty()) {
+            $otherPlayersStages = Stage::whereIn('player_id', $otherPlayerIds)
                 ->with(['player.user'])
-                ->get();
+                ->latest()
+                ->get()
+                ->groupBy('player_id')
+                ->map(fn($stages) => $stages->first());
         }
 
         $currentChallenge = $game->currentChallenge;
@@ -258,37 +280,20 @@ class GameController extends Controller
         }
 
         if ($next && $stage->isOver()) {
-            $currentChallengeId = $game->current_challenge_id;
-            $allStagesForChallenge = Stage::where('challenge_id', $currentChallengeId)->get();
-
-            $allCompleted = $allStagesForChallenge->every(function ($s) {
-                return $s->isOver();
-            });
-
-            if (! $allCompleted) {
-                return redirect()->route('games.show', ['id' => $id]);
-            }
-
             $challengeData = $challengeGenerator->generate();
             $challenge = Challenge::create([
                 'category' => $challengeData->category,
                 'word' => $challengeData->word,
             ]);
 
-            $game->update(['current_challenge_id' => $challenge->id]);
-
-            foreach ($game->playerProfiles as $gamePlayer) {
-                if ($gamePlayer->is_active) {
-                    Stage::create([
-                        'player_id' => $gamePlayer->id,
-                        'challenge_id' => $challenge->id,
-                        'guesses' => [],
-                        'correct_guesses' => [],
-                        'started_at' => now(),
-                        'time_left' => $duration,
-                    ]);
-                }
-            }
+            Stage::create([
+                'player_id' => $player->id,
+                'challenge_id' => $challenge->id,
+                'guesses' => [],
+                'correct_guesses' => [],
+                'started_at' => now(),
+                'time_left' => $duration,
+            ]);
 
             return redirect()->route('games.show', ['id' => $id]);
         } elseif ($skip) {
