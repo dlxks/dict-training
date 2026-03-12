@@ -40,17 +40,35 @@
             </div>
         </div>
 
-        <!-- Join Button for Spectators -->
+        <!-- Spectator Section -->
         @if (!$currentPlayer)
             <div class="bg-yellow-300 border-[3px] border-black p-4 shadow-[4px_4px_0_0_#000] text-center">
-                <p class="font-black text-lg uppercase mb-2">You are viewing as a spectator</p>
-                <form action="{{ route('games.join', $id) }}" method="POST">
-                    @csrf
-                    <button type="submit"
-                        class="bg-black text-white px-6 py-2 text-sm font-black uppercase shadow-[2px_2px_0_0_#ccc] active:translate-y-0.5">
-                        Join to Play
-                    </button>
-                </form>
+                @if (isset($pureSpectator) && $pureSpectator)
+                    <p class="font-black text-lg uppercase mb-2">👁️ Pure Spectator Mode</p>
+                    <p class="text-sm font-bold uppercase mb-4">Watching only - cannot join or play</p>
+
+                    @if ($currentChallenge)
+                        <div class="bg-blue-50 border-[3px] border-black p-4 shadow-[4px_4px_0_0_#000] mb-4">
+                            <h4 class="font-black uppercase text-lg mb-2 tracking-widest">Current Challenge</h4>
+                            <div class="text-3xl font-black tracking-widest text-center uppercase mb-2">
+                                G R E E N
+                            </div>
+                            <p class="text-sm uppercase font-bold text-gray-700">Category:
+                                {{ str_replace('_', ' ', $currentChallenge->category ?? 'unknown') }}</p>
+                            <p class="text-xs uppercase font-bold text-gray-500 mt-1">Full word shown for spectator
+                                testing</p>
+                        </div>
+                    @endif
+                @else
+                    <p class="font-black text-lg uppercase mb-2">You are viewing as a spectator</p>
+                    <form action="{{ route('games.join', $id) }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                            class="bg-black text-white px-6 py-2 text-sm font-black uppercase shadow-[2px_2px_0_0_#ccc] active:translate-y-0.5">
+                            Join to Play
+                        </button>
+                    </form>
+                @endif
             </div>
         @else
             <!-- Game Board (only for players) -->

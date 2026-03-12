@@ -53,13 +53,20 @@
                                 PLAY
                             </a>
                         @else
-                            <form action="{{ route('games.join', $game->id) }}" method="POST">
-                                @csrf
-                                <button type="submit"
-                                    class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5 cursor-pointer">
-                                    JOIN
-                                </button>
-                            </form>
+                            <div class="flex gap-1">
+                                <a href="{{ route('games.spectate', $game->id) }}"
+                                    class="bg-gray-500 text-white border-2 border-black px-3 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5 cursor-pointer hover:bg-gray-600"
+                                    title="Watch only - no playing">
+                                    👁️
+                                </a>
+                                <form action="{{ route('games.join', $game->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit"
+                                        class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5 cursor-pointer">
+                                        JOIN
+                                    </button>
+                                </form>
+                            </div>
                         @endif
                     </div>
                 </div>
