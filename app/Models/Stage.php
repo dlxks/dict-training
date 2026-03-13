@@ -136,6 +136,9 @@ class Stage extends Pivot
 
     public function __toString()
     {
+        if ($this->isOver() || $this->skipped) {
+            return strtoupper($this->word);
+        }
         $word = strtoupper($this->word);
         $correct = $this->correct_guesses ?? [];
         $display = [];

@@ -85,15 +85,20 @@
                 </div>
             </div>
 
-            @if ($game->isCompleted() || $game->isFailed())
+            @if ($game->isOver())
                 <div
                     class="bg-black text-white p-2 border-4 border-double border-white shadow-[4px_4px_0_0_#000] text-center transform -rotate-1">
                     <p class="font-black text-2xl uppercase italic tracking-tighter">
                         {{ $game->isCompleted() ? 'MISSION CLEAR!!' : 'K.O.!!' }}
                     </p>
-                    @if ($game->isFailed())
-                        <p class="text-[10px] font-bold uppercase mt-1">Ans: {{ $game->challenge->word ?? '' }}</p>
-                    @endif
+                </div>
+            @endif
+
+            @if ($currentPlayer && $game && ($game->isOver() || $isLimitReached))
+                <div
+                    class="bg-black text-yellow-300 border-[4px] border-yellow-500 p-4 mt-3 font-black uppercase text-center shadow-[6px_6px_0_0_#000] transform -rotate-2 tracking-widest">
+                    <span class="text-2xl block mb-2">CORRECT ANSWER</span>
+                    <span class="text-3xl font-extrabold">{{ strtoupper($game->challenge->word ?? '??') }}</span>
                 </div>
             @endif
 
@@ -181,6 +186,9 @@
         </div>
     </div>
 
+    @php
+        $isSolved = $currentPlayer && $game && $game->isCompleted() && !($game->skipped ?? false);
+    @endphp
     @if ($currentPlayer)
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -230,6 +238,64 @@
                         timerValueInput.value = timeLeft;
                     }
                 });
+
+                // Confetti celebration for perfectly solved challenges (no skip)
+                const isSolved = {{ $isSolved ? 'true' : 'false' }};
+                if (isSolved) {
+                    (function() {
+                        const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd',
+                            '#00d2d3'
+                        ];
+                        const canvas = document.createElement('canvas');
+                        canvas.style.position = 'fixed';
+                        canvas.style.top = '0';
+                        canvas.style.left = '0';
+                        canvas.width = window.innerWidth;
+                        canvas.height = window.innerHeight;
+                        canvas.style.zIndex = '10000';
+                        canvas.style.pointerEvents = 'none';
+                        document.body.appendChild(canvas);
+                        const ctx = canvas.getContext('2d');
+                        let particles = [];
+                        for (let i = 0; i < 200; i++) {
+                            particles.push({
+                                x: Math.random() * canvas.width,
+                                y: Math.random() * canvas.height - canvas.height,
+                                vx: (Math.random() - 0.5) * 10,
+                                vy: Math.random() * 5 + 5,
+                                color: colors[Math.floor(Math.random() * colors.length)],
+                                size: Math.random() * 5 + 3,
+                                rotation: Math.random() * 360,
+                                rotSpeed: (Math.random() - 0.5) * 10
+                            });
+                        }
+
+                        function animate() {
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
+                            particles.forEach(p => {
+                                p.x += p.vx;
+                                p.y += p.vy;
+                                p.rotation += p.rotSpeed;
+                                p.vy += 0.1;
+                                p.life = (p.life || 1) - 0.02;
+                                if (p.y < canvas.height) {
+                                    ctx.save();
+                                    ctx.translate(p.x, p.y);
+                                    ctx.rotate(p.rotation * Math.PI / 180);
+                                    ctx.fillStyle = p.color;
+                                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                                    ctx.restore();
+                                }
+                            });
+                            particles = particles.filter(p => p.y < canvas.height && (p.life || 1) > 0);
+                            if (particles.length > 0) requestAnimationFrame(animate);
+                            else {
+                                canvas.remove();
+                            }
+                        }
+                        animate();
+                    })();
+                }
             });
         </script>
     @endif
