@@ -1,0 +1,7 @@
+services:
+  db:
+    environment:
+      MYSQL_DATABASE: hangman_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: forge
+      MYSQL_PASSWORD: forge
