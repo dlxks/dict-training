@@ -49,7 +49,7 @@
             <!-- Game Board -->
             <div class="grid grid-cols-5 gap-2">
                 <div class="col-span-2 bg-white border-[3px] border-black p-1 bg-halftone shadow-[4px_4px_0_0_#000]">
-                    <x-hangman-stickman :lives="$game?->lives ?? 6" :is-failed="$game?->isFailed()" />
+                    <x-hangman-stickman :lives="$game?->lives ?? $gameData['starting_lives']" :maxLives="$gameData['starting_lives']" :is-failed="$game?->isFailed() ?? false" />
                 </div>
                 <div
                     class="col-span-3 bg-blue-50 border-[3px] border-black p-2 shadow-[4px_4px_0_0_#000] {{ session('correct_guess') ? 'animate-critical' : '' }}">
