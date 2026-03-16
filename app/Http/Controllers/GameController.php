@@ -67,20 +67,14 @@ class GameController extends Controller
             'is_active' => true,
         ]);
 
-        // 3. Create initial Dictionary Challenge
-        $challengeData = $challengeGenerator->generate();
-        $challenge = Challenge::create([
-            'category' => $challengeData->category,
-            'word' => $challengeData->word,
-        ]);
+        // Generate fixed challenges for game
+        $game->generateChallenges($challengeGenerator, $data['num_words']);
 
-        // 4. Set current challenge on game
-        $game->update(['current_challenge_id' => $challenge->id]);
-
-        // 5. Bind them together into an active Stage
+        // Create initial stage for creator using first challenge
+        $firstChallenge = $game->challenges()->first();
         Stage::create([
             'player_id' => $player->id,
-            'challenge_id' => $challenge->id,
+            'challenge_id' => $firstChallenge->id,
             'guesses' => [],
             'correct_guesses' => [],
         ]);
@@ -103,16 +97,14 @@ class GameController extends Controller
             'user_id' => $user->id,
             'is_active' => true,
             'score' => 0,
+            'current_stage_index' => 0,
         ]);
 
-        $challengeData = $challengeGenerator->generate();
-        $challenge = Challenge::create([
-            'category' => $challengeData->category,
-            'word' => $challengeData->word,
-        ]);
+        // Use game's first challenge
+        $firstChallenge = $game->challenges()->firstOrFail();
         Stage::create([
             'player_id' => $player->id,
-            'challenge_id' => $challenge->id,
+            'challenge_id' => $firstChallenge->id,
             'guesses' => [],
             'correct_guesses' => [],
             'started_at' => now(),
@@ -136,14 +128,30 @@ class GameController extends Controller
         $disabledKeys = true;
         $duration = $game->duration ?? 15;
         $startingLives = $game->starting_lives ?? 6;
+        $isLimitReached = false;
 
         if ($player) {
-            $stage = Stage::where('player_id', $player->id)
-                ->with('challenge')
-                ->latest()
-                ->first();
+            $currentChallenge = $game->getCurrentChallengeForPlayer($player);
 
-            if ($stage) {
+            // Since update() immediately bumps the index on the last word, this block cleanly triggers Game Complete
+            if (! $currentChallenge || $player->current_stage_index >= $game->num_words) {
+                $isLimitReached = true;
+                $stage = Stage::where('player_id', $player->id)->latest()->first();
+                $disabledKeys = true;
+            } else {
+                $stage = Stage::where('player_id', $player->id)
+                    ->where('challenge_id', $currentChallenge->id)
+                    ->first();
+
+                if (! $stage) {
+                    $stage = Stage::create([
+                        'player_id' => $player->id,
+                        'challenge_id' => $currentChallenge->id,
+                        'guesses' => [],
+                        'correct_guesses' => [],
+                    ]);
+                }
+
                 if (! $stage->started_at) {
                     $stage->update(['started_at' => now()]);
                 }
@@ -201,10 +209,10 @@ class GameController extends Controller
             'timeLeft' => $timeLeft,
             'otherPlayersStages' => $otherPlayersStages,
             'currentChallenge' => $currentChallenge,
-            'playerStageCount' => $player ? Stage::where('player_id', $player->id)->count() : 0,
+            'playerStageCount' => $player ? min(($player->current_stage_index ?? 0) + 1, $game->num_words) : 0,
             'correctlyGuessed' => $player ? Stage::where('player_id', $player->id)->where('is_completed', 1)->where('skipped', 0)->count() : 0,
             'numWords' => $game->num_words ?? 10,
-            'isLimitReached' => $player ? Stage::where('player_id', $player->id)->count() >= ($game->num_words ?? 999) : false,
+            'isLimitReached' => $isLimitReached,
         ]);
     }
 
@@ -213,25 +221,16 @@ class GameController extends Controller
         $game = Game::findOrFail($id);
         $this->authorize('view', $game);
 
-        $player = null;
-        $pureSpectator = true;
-        $stage = null;
-        $timeLeft = 0;
-        $disabledKeys = true;
-        $duration = $game->duration ?? 15;
-        $startingLives = $game->starting_lives ?? 6;
-
         $leaderboard = Player::with('user')
             ->where('game_id', $game->id)
             ->orderByDesc('score')
             ->get();
 
+        $otherPlayersStages = collect();
+
         $otherPlayerIds = Player::where('game_id', $game->id)
-            ->where('user_id', '!=', $request->user()->id)
             ->where('is_active', true)
             ->pluck('id');
-
-        $otherPlayersStages = collect();
 
         if ($otherPlayerIds->isNotEmpty()) {
             $otherPlayersStages = Stage::whereIn('player_id', $otherPlayerIds)
@@ -242,23 +241,20 @@ class GameController extends Controller
                 ->map(fn ($stages) => $stages->first());
         }
 
-        $currentChallenge = $game->currentChallenge;
-
         return view('game.show', [
-            'game' => $stage,
-            'disabledKeys' => $disabledKeys,
+            'game' => null,
+            'disabledKeys' => true,
             'id' => $id,
             'gameData' => [
                 'name' => $game->name,
-                'duration' => $duration,
-                'starting_lives' => $startingLives,
+                'duration' => $game->duration ?? 15,
+                'starting_lives' => $game->starting_lives ?? 6,
             ],
             'leaderboard' => $leaderboard,
-            'currentPlayer' => $player,
-            'timeLeft' => $timeLeft,
+            'currentPlayer' => null,
+            'timeLeft' => 0,
             'otherPlayersStages' => $otherPlayersStages,
-            'pureSpectator' => $pureSpectator,
-            'currentChallenge' => $currentChallenge,
+            'pureSpectator' => true,
             'playerStageCount' => 0,
             'numWords' => $game->num_words ?? 10,
             'isLimitReached' => false,
@@ -292,28 +288,22 @@ class GameController extends Controller
         }
 
         if ($next && $stage->isOver()) {
-            if (Stage::where('player_id', $player->id)->count() >= $game->num_words) {
+            $nextIndex = ($player->current_stage_index ?? 0) + 1;
+            $player->update(['current_stage_index' => $nextIndex]);
+
+            if ($nextIndex >= $game->num_words) {
                 return redirect()->route('games.show', $id)->with('info', 'You have completed all '.$game->num_words.' words!');
             }
-            $challengeData = $challengeGenerator->generate();
-            $challenge = Challenge::create([
-                'category' => $challengeData->category,
-                'word' => $challengeData->word,
-            ]);
-
-            Stage::create([
-                'player_id' => $player->id,
-                'challenge_id' => $challenge->id,
-                'guesses' => [],
-                'correct_guesses' => [],
-                'started_at' => now(),
-                'time_left' => $duration,
-            ]);
 
             return redirect()->route('games.show', ['id' => $id]);
         } elseif ($skip) {
             $stage->skip();
             $stage->update(['is_completed' => true, 'completed_at' => now()]);
+
+            // Instant completion check for skipped final words
+            if ($player->current_stage_index == ($game->num_words - 1)) {
+                $player->update(['current_stage_index' => $game->num_words]);
+            }
 
             return redirect()->route('games.show', ['id' => $id]);
         } else {
@@ -321,7 +311,15 @@ class GameController extends Controller
             if ($guess && ! $stage->is_completed) {
                 $stage->guess($guess);
 
-                if ($stage->isOver() && count(array_diff(str_split($stage->challenge->word), $stage->getCorrectGuesses() ?? [])) === 0) {
+                // FIX: Refresh the stage model to get the newly appended guess from the DB
+                $stage->refresh();
+
+                // FIX: Make the array diff case-insensitive to ensure it always evaluates perfectly
+                $wordLetters = array_map('strtoupper', str_split($stage->challenge->word));
+                $guessedLetters = array_map('strtoupper', $stage->getCorrectGuesses() ?? []);
+                $isWordComplete = count(array_diff($wordLetters, $guessedLetters)) === 0;
+
+                if ($stage->isOver() && $isWordComplete) {
                     $stage->update(['is_completed' => true, 'completed_at' => now()]);
 
                     $timeBonus = max(0, ($duration - $timeTaken) * 10);
@@ -330,6 +328,12 @@ class GameController extends Controller
                     $basePoints = 100;
 
                     $player->increment('score', $basePoints + $timeBonus + $livesBonus);
+                }
+
+                // FIX: Instant Game Completion check
+                // If the word is over (won or failed) and it's the last word, bump the index immediately!
+                if ($stage->isOver() && $player->current_stage_index == ($game->num_words - 1)) {
+                    $player->update(['current_stage_index' => $game->num_words]);
                 }
             }
         }
@@ -344,8 +348,10 @@ class GameController extends Controller
         $game = Game::findOrFail($id);
         $this->authorize('delete', $game);
 
+        // Delete in correct order for foreign keys: stages -> challenges -> players -> game
         $playerIds = Player::where('game_id', $game->id)->pluck('id');
         Stage::whereIn('player_id', $playerIds)->delete();
+        Challenge::where('game_id', $game->id)->delete();
         Player::where('game_id', $game->id)->delete();
         $game->delete();
 

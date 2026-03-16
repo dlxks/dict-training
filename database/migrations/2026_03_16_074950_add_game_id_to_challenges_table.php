@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('games', function (Blueprint $table) {
-            $table->unsignedInteger('num_words')->default(10);
+        Schema::table('challenges', function (Blueprint $table) {
+            $table->uuid('game_id')->nullable()->after('id');
+            $table->foreign('game_id')->references('id')->on('games');
         });
     }
 
@@ -21,8 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('games', function (Blueprint $table) {
-            //
+        Schema::table('challenges', function (Blueprint $table) {
+            $table->dropForeign(['game_id']);
+            $table->dropColumn('game_id');
         });
     }
 };

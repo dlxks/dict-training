@@ -17,11 +17,21 @@ class Player extends Pivot
 
     public $timestamps = true;
 
-    protected $fillable = ['game_id', 'user_id', 'is_active', 'score'];
+    protected $fillable = [
+        'game_id',
+        'user_id',
+        'is_active',
+        'score',
+        'current_stage_index',
+    ];
+
+    protected $casts = [
+        'current_stage_index' => 'integer',
+    ];
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     public function game(): BelongsTo

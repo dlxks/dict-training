@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stages', function (Blueprint $table) {
-            $table->integer('time_left')->nullable()->after('started_at');
+        Schema::table('players', function (Blueprint $table) {
+            $table->unsignedInteger('current_stage_index')->default(0);
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stages', function (Blueprint $table) {
-            $table->dropColumn('time_left');
+        Schema::table('players', function (Blueprint $table) {
+            $table->dropColumn('current_stage_index');
         });
     }
 };
