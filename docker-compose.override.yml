@@ -1,3 +1,42 @@
 services:
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      - MP_LOG=/data/log/mailpit.log
+
   db:
     environment:
+      MYSQL_DATABASE: hangman_db
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: forge
+      MYSQL_PASSWORD: forge
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    volumes:
+      - .:/var/www/html
+    environment:
+      - MAIL_MAILER=mailpit
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
+      - MAIL_USERNAME=null
+      - MAIL_PASSWORD=null
+      - MAIL_ENCRYPTION=null
+      - MAIL_FROM_ADDRESS=noreply@hangman.local
+      - MAIL_FROM_NAME="${APP_NAME:-Hangman}"
+volumes:
+  db_data:
+    driver: local
