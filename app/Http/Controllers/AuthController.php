@@ -20,7 +20,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('games.index'));
+            return redirect()->intended(route('lobby.index'));
         }
 
         return back()->withErrors([

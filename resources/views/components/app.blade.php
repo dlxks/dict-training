@@ -33,6 +33,18 @@
     @endauth
 
     <div class="max-w-md mx-auto py-4 px-2">
+        @if (session('success'))
+            <div
+                class="bg-green-500 text-white border-2 border-black p-2 mb-2 font-black text-xs uppercase shadow-[2px_2px_0_0_#000]">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div
+                class="bg-red-500 text-white border-2 border-black p-2 mb-2 font-black text-xs uppercase shadow-[2px_2px_0_0_#000]">
+                {{ session('error') }}
+            </div>
+        @endif
         {{ $slot }}
     </div>
 </body>

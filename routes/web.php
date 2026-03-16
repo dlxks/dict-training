@@ -18,6 +18,15 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
+    // Lobby
+    Route::get('/lobby', [App\Http\Controllers\LobbyController::class, 'index'])->name('lobby.index');
+
+    // Join a game
+    Route::post('/games/{game}/join', [GameController::class, 'join'])->name('games.join');
+
+    // Spectate a game (pure view mode)
+    Route::get('/games/{game}/spectate', [GameController::class, 'spectate'])->name('games.spectate');
+
     Route::resource('games', GameController::class)
         ->except(['edit'])
         ->parameter('games', 'id');

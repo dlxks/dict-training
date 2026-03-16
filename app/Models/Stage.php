@@ -14,11 +14,23 @@ class Stage extends Pivot
 
     public $incrementing = false;
 
-    protected $fillable = ['player_id', 'challenge_id', 'guesses', 'correct_guesses'];
+    protected $fillable = [
+        'player_id',
+        'challenge_id',
+        'guesses',
+        'correct_guesses',
+        'started_at',
+        'time_left',
+        'completed_at',
+        'is_completed',
+        'skipped',
+    ];
 
     protected $casts = [
         'guesses' => 'array',
         'correct_guesses' => 'array',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function player(): BelongsTo
@@ -75,12 +87,17 @@ class Stage extends Pivot
 
     public function isOver()
     {
-        return $this->isCompleted() || $this->isFailed();
+        return $this->isCompleted() || $this->isFailed() || $this->skipped;
     }
 
     public function getGuesses()
     {
         return $this->guesses ?? [];
+    }
+
+    public function getCorrectGuesses()
+    {
+        return $this->correct_guesses ?? [];
     }
 
     public function guess(string $char)
@@ -111,15 +128,17 @@ class Stage extends Pivot
 
     public function skip()
     {
-        $maxLives = $this->player->game->starting_lives ?? 6;
-        // Inject dummy guesses to exhaust all remaining lives instantly
-        $dummyGuesses = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
-        $this->guesses = array_slice($dummyGuesses, 0, $maxLives);
+        $this->skipped = true;
+        $this->is_completed = true;
+        $this->completed_at = now();
         $this->save();
     }
 
     public function __toString()
     {
+        if ($this->isOver() || $this->skipped) {
+            return strtoupper($this->word);
+        }
         $word = strtoupper($this->word);
         $correct = $this->correct_guesses ?? [];
         $display = [];

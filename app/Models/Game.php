@@ -15,7 +15,7 @@ class Game extends Model
 
     public $incrementing = false;
 
-    protected $fillable = ['name', 'starting_lives', 'user_id'];
+    protected $fillable = ['name', 'starting_lives', 'duration', 'num_words', 'user_id', 'current_challenge_id'];
 
     public function creator(): BelongsTo
     {
@@ -32,5 +32,10 @@ class Game extends Model
     public function playerProfiles(): HasMany
     {
         return $this->hasMany(Player::class);
+    }
+
+    public function currentChallenge(): BelongsTo
+    {
+        return $this->belongsTo(Challenge::class, 'current_challenge_id');
     }
 }

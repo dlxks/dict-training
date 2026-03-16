@@ -17,7 +17,7 @@ class Player extends Pivot
 
     public $timestamps = true;
 
-    protected $fillable = ['game_id', 'user_id', 'is_active'];
+    protected $fillable = ['game_id', 'user_id', 'is_active', 'score'];
 
     public function user(): BelongsTo
     {

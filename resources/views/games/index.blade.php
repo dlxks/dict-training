@@ -1,9 +1,14 @@
-
 <x-app>
     <x-slot:title>My Games</x-slot:title>
 
     <div class="flex justify-between items-center mb-4 bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000]">
-        <h1 class="text-xl font-black uppercase italic">Game Logs</h1>
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-black uppercase italic">Game Logs</h1>
+            <a href="{{ route('lobby.index') }}"
+                class="text-xs font-black uppercase underline decoration-2 underline-offset-2 text-blue-600 hover:text-blue-800">
+                Back to Lobby
+            </a>
+        </div>
         <a href="{{ route('games.create') }}"
             class="bg-black text-white px-3 py-1 text-xs font-black uppercase transition-transform active:translate-y-0.5">
             + New
@@ -33,6 +38,11 @@
                                 <a href="{{ route('games.show', $id) }}">{{ $gameData['name'] }}</a>
                             </h2>
                             <div class="flex items-center gap-2 mt-1">
+                                @if (isset($gameData['stage_count']))
+                                    <span class="text-[10px] font-black tracking-tighter">
+                                        {{ $gameData['stage_count'] }} / {{ $gameData['num_words'] ?? '∞' }} words
+                                    </span>
+                                @endif
                                 @if ($gameData['challenge']->isCompleted())
                                     <span
                                         class="bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase">Cleared</span>
@@ -47,10 +57,21 @@
                                 @endif
                             </div>
                         </div>
-                        <a href="{{ route('games.show', $id) }}"
-                            class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5">
-                            Play
-                        </a>
+                        <div class="flex gap-2">
+                            <a href="{{ route('games.show', $id) }}"
+                                class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5">
+                                Play
+                            </a>
+                            <form action="{{ route('games.destroy', $id) }}" method="POST"
+                                onsubmit="return confirm('Are you sure you want to delete this game?');">
+                                @method('DELETE')
+                                @csrf
+                                <button type="submit"
+                                    class="bg-red-500 border-2 border-black px-3 py-1 text-xs font-black uppercase text-white shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             @endforeach
