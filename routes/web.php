@@ -13,6 +13,12 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/', [AuthController::class, 'show'])->name('login');
     Route::post('/', [AuthController::class, 'login'])->name('auth.login');
+
+    // Google OAuth
+    Route::get('/auth/google', [AuthController::class, 'googleRedirect'])->name('auth.google');
+    Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
+    Route::get('/auth/google/username', [AuthController::class, 'googleUsernameShow'])->name('auth.google.username.show');
+    Route::post('/auth/google/username', [AuthController::class, 'googleUsernameStore'])->name('auth.google.username');
 });
 
 Route::middleware('auth')->group(function () {
