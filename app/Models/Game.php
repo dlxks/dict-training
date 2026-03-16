@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Classes\ChallengeGenerator;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,18 @@ class Game extends Model
 
     public $incrementing = false;
 
-    protected $fillable = ['name', 'starting_lives', 'duration', 'num_words', 'user_id', 'current_challenge_id'];
+    protected $fillable = [
+        'name',
+        'starting_lives',
+        'duration',
+        'num_words',
+        'user_id',
+        'current_challenge_id',
+    ];
+
+    protected $casts = [
+        'current_challenge_id' => 'string',
+    ];
 
     public function creator(): BelongsTo
     {
@@ -37,5 +49,35 @@ class Game extends Model
     public function currentChallenge(): BelongsTo
     {
         return $this->belongsTo(Challenge::class, 'current_challenge_id');
+    }
+
+    public function challenges(): HasMany
+    {
+        return $this->hasMany(Challenge::class)->orderBy('created_at');
+    }
+
+    public function generateChallenges(ChallengeGenerator $generator, int $numWords): void
+    {
+        if ($this->challenges()->count() > 0) {
+            return; // Already generated
+        }
+
+        for ($i = 0; $i < $numWords; $i++) {
+            $challengeData = $generator->generate();
+            Challenge::create([
+                'category' => $challengeData->category,
+                'word' => $challengeData->word,
+                'game_id' => $this->id,
+            ]);
+        }
+
+        $this->update(['current_challenge_id' => $this->challenges()->first()?->id]);
+    }
+
+    public function getCurrentChallengeForPlayer(Player $player): ?Challenge
+    {
+        $index = $player->current_stage_index ?? 0;
+
+        return $this->challenges()->skip($index)->first();
     }
 }
