@@ -21,7 +21,7 @@
             <div>
                 <label class="block text-[10px] font-black uppercase">Choose Username (Required)</label>
                 <input type="text" name="name" value="{{ old('name') }}" required
-                    class="block w-full px-3 py-2 border-[3px] border-black text-lg font-black outline-none focus:bg-yellow-50 @error('name') border-red-500 @enderror">
+                    class="block w-full px-3 py-2 border-[3px] border-black text-lg font-black outline-none focus:bg-yellow-50 @error('name') @enderror">
                 @error('name')
                     <p class="mt-1 text-[10px] font-black text-red-700">{{ $message }}</p>
                 @enderror

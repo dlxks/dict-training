@@ -22,6 +22,17 @@ class AuthController extends Controller
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            if (! $user->hasVerifiedEmail()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Please verify your email address before logging in. Check your email for the verification link.',
+                ])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
             return redirect()->intended(route('lobby.index'));
@@ -94,10 +105,11 @@ class AuthController extends Controller
             'password' => Hash::make('password123'),
         ]);
 
+        $user->sendEmailVerificationNotification();
         Auth::login($user);
         session()->forget('google_user');
         session()->regenerate();
 
-        return redirect()->intended(route('lobby.index'));
+        return redirect()->route('verification.notice')->with('success', 'Google account linked! Please verify your email to continue.');
     }
 }

@@ -26,4 +26,11 @@ class LoginAuthRequest extends FormRequest
             'password' => ['required', 'string'],
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'email.exists' => 'This email address has not been verified. Please check your email for the verification link.',
+        ];
+    }
 }
