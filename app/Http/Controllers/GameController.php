@@ -348,8 +348,10 @@ class GameController extends Controller
         $game = Game::findOrFail($id);
         $this->authorize('delete', $game);
 
+        // Delete in correct order for foreign keys: stages -> challenges -> players -> game
         $playerIds = Player::where('game_id', $game->id)->pluck('id');
         Stage::whereIn('player_id', $playerIds)->delete();
+        Challenge::where('game_id', $game->id)->delete();
         Player::where('game_id', $game->id)->delete();
         $game->delete();
 
