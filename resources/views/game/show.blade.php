@@ -1,74 +1,65 @@
 <x-app>
-    <x-slot:title>
-        {{ $gameData['name'] }} - {{ ucwords(str_replace('_', ' ', $game->category)) }}
-    </x-slot:title>
+    <x-slot:title>{{ $gameData['name'] }}</x-slot:title>
 
-    <div class="card bg-base-100 shadow-xl">
-        <div class="card-body items-center text-center">
-
-            <div class="w-full flex justify-between items-start mb-4 border-b border-base-200 pb-4">
-                <h2 class="text-2xl font-bold">{{ $gameData['name'] }}</h2>
-                <div class="badge badge-outline badge-lg shadow-sm">
-                    Lives: <span class="text-error font-bold ml-1">{{ $game->lives }}</span>
-                </div>
+    <div class="space-y-3">
+        <div class="bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000] flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-black uppercase leading-tight italic">{{ $gameData['name'] }}</h2>
+                <span class="text-[10px] font-bold bg-black text-white px-1 uppercase tracking-tighter">
+                    {{ str_replace('_', ' ', $game->category) }}
+                </span>
             </div>
-
-            @if ($game->isCompleted())
-                <div class="alert alert-success shadow-sm mb-6 w-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="font-bold">Congratulations! You guessed the word!</span>
-                </div>
-            @elseif ($game->isFailed())
-                <div class="alert alert-error shadow-sm mb-6 w-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span class="font-bold">You failed! The word was: {{ $game->word }}</span>
-                </div>
-            @endif
-
-            <div class="badge badge-neutral mb-3">{{ ucwords(str_replace('_', ' ', $game->category)) }}</div>
-            <div
-                class="text-4xl md:text-5xl font-mono tracking-[0.5em] font-bold py-10 w-full bg-base-200 rounded-box mb-8 shadow-inner">
-                {{ $game }}
-            </div>
-
-            <form method="post" action="{{ route('games.update', ['id' => $id]) }}" class="w-full">
-                @method('put')
-                @csrf
-
-                <x-keyboard :disabled-keys="$disabledKeys" />
-
-                @error('guess')
-                    <div class="text-error text-sm font-medium mt-4">{{ $message }}</div>
-                @enderror
-
-                <div class="mt-10">
-                    @if (!$game->isOver())
-                        <button type="submit" name="skip" value="1"
-                            class="btn btn-ghost btn-sm text-base-content/60">
-                            Skip Challenge &rarr;
-                        </button>
-                    @else
-                        <button type="submit" name="next" value="1"
-                            class="btn btn-primary w-full max-w-xs shadow-md">
-                            Next Challenge
-                        </button>
-                    @endif
-                </div>
-            </form>
-
-            <div class="mt-8 pt-6 border-t border-base-200 w-full text-center">
-                <a href="{{ route('games.index') }}" class="btn btn-ghost">
-                    &larr; Back to My Games
-                </a>
+            <div class="bg-yellow-300 border-2 border-black px-2 py-1 transform rotate-2">
+                <span class="text-xs font-black uppercase">HP: {{ $game->lives }}</span>
             </div>
         </div>
+
+        <div class="grid grid-cols-5 gap-2">
+            <div class="col-span-2 bg-white border-[3px] border-black p-1 bg-halftone shadow-[4px_4px_0_0_#000]">
+                <x-hangman-stickman :lives="$game->lives" :is-failed="$game->isFailed()" />
+            </div>
+
+            <div
+                class="col-span-3 bg-blue-50 border-[3px] border-black p-2 shadow-[4px_4px_0_0_#000] 
+                {{ session('correct_guess') ? 'animate-critical' : '' }}">
+                <div class="text-2xl font-black tracking-widest text-center break-all leading-relaxed uppercase">
+                    {{ $game }}
+                </div>
+            </div>
+        </div>
+
+        @if ($game->isCompleted() || $game->isFailed())
+            <div
+                class="bg-black text-white p-2 border-4 border-double border-white shadow-[4px_4px_0_0_#000] text-center transform -rotate-1">
+                <p class="font-black text-2xl uppercase italic tracking-tighter">
+                    {{ $game->isCompleted() ? 'MISSION CLEAR!!' : 'K.O.!!' }}
+                </p>
+                @if ($game->isFailed())
+                    <p class="text-[10px] font-bold uppercase mt-1">Ans: {{ $game->word }}</p>
+                @endif
+            </div>
+        @endif
+
+        <form method="post" action="{{ route('games.update', ['id' => $id]) }}">
+            @method('put')
+            @csrf
+            <div class="bg-white border-[3px] border-black p-2 shadow-[4px_4px_0_0_#000]">
+                <x-keyboard :disabled-keys="$disabledKeys" />
+            </div>
+
+            <div class="mt-4 flex flex-col gap-2">
+                @if (!$game->isOver())
+                    <button type="submit" name="skip" value="1"
+                        class="text-xs font-black uppercase underline decoration-2 underline-offset-2">
+                        Skip Round >>
+                    </button>
+                @else
+                    <button type="submit" name="next" value="1"
+                        class="w-full py-3 bg-black text-white border-[3px] border-black font-black uppercase text-lg shadow-[4px_4px_0_0_#ccc] active:translate-y-1">
+                        NEXT CHALLENGE!
+                    </button>
+                @endif
+            </div>
+        </form>
     </div>
 </x-app>

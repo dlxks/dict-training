@@ -1,43 +1,56 @@
+
 <x-app>
     <x-slot:title>My Games</x-slot:title>
 
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">My Games</h1>
-        <a href="{{ route('games.create') }}" class="btn btn-primary">
-            + New Game
+    <div class="flex justify-between items-center mb-4 bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000]">
+        <h1 class="text-xl font-black uppercase italic">Game Logs</h1>
+        <a href="{{ route('games.create') }}"
+            class="bg-black text-white px-3 py-1 text-xs font-black uppercase transition-transform active:translate-y-0.5">
+            + New
         </a>
     </div>
 
-    @if(empty($games))
-        <div class="alert shadow-sm bg-base-100">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>You don't have any games in progress.</span>
-            <div>
-                <a href="{{ route('games.create') }}" class="btn btn-sm btn-primary">Start Playing</a>
-            </div>
+    @if (empty($games))
+        <div class="bg-white border-[3px] border-black p-8 text-center shadow-[4px_4px_0_0_#000]">
+            <h3 class="text-lg font-black uppercase text-red-500 mb-1">Empty!</h3>
+            <p class="text-xs font-bold mb-4 uppercase">No active operations found.</p>
+            <a href="{{ route('games.create') }}"
+                class="text-sm bg-yellow-300 border-2 border-black px-4 py-2 font-black uppercase inline-block">
+                Initialize &rarr;
+            </a>
         </div>
     @else
-        <div class="flex flex-col gap-4">
-            @foreach($games as $id => $gameData)
-                <div class="card bg-base-100 shadow-sm border border-base-300 transition-shadow hover:shadow-md">
-                    <div class="card-body flex-row justify-between items-center p-6">
-                        <div>
-                            <h2 class="card-title text-primary hover:underline">
+        <div class="grid gap-3">
+            @foreach ($games as $id => $gameData)
+                <div
+                    class="bg-white border-[3px] border-black p-3 shadow-[4px_4px_0_0_#000] relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-12 h-12 border-2 border-black rotate-12 opacity-10 bg-black">
+                    </div>
+
+                    <div class="flex justify-between items-center relative z-10">
+                        <div class="flex-1 min-w-0 pr-2">
+                            <h2 class="text-lg font-black uppercase truncate italic">
                                 <a href="{{ route('games.show', $id) }}">{{ $gameData['name'] }}</a>
                             </h2>
-                            <div class="mt-2">
-                                @if($gameData['challenge']->isCompleted())
-                                    <div class="badge badge-success gap-1">Won</div>
+                            <div class="flex items-center gap-2 mt-1">
+                                @if ($gameData['challenge']->isCompleted())
+                                    <span
+                                        class="bg-black text-white px-2 py-0.5 text-[10px] font-black uppercase">Cleared</span>
                                 @elseif($gameData['challenge']->isFailed())
-                                    <div class="badge badge-error gap-1">Failed</div>
+                                    <span
+                                        class="bg-white border border-black px-2 py-0.5 text-[10px] font-black uppercase">Failed</span>
                                 @else
-                                    <div class="badge badge-warning gap-1">In Progress</div>
+                                    <span
+                                        class="bg-yellow-300 border border-black px-2 py-0.5 text-[10px] font-black uppercase">Active</span>
+                                    <span class="text-[10px] font-black tracking-tighter">HP:
+                                        {{ $gameData['challenge']->lives }}</span>
                                 @endif
                             </div>
                         </div>
-                        <div class="card-actions justify-end">
-                            <a href="{{ route('games.show', $id) }}" class="btn btn-secondary btn-sm md:btn-md">Play &rarr;</a>
-                        </div>
+                        <a href="{{ route('games.show', $id) }}"
+                            class="bg-white border-2 border-black px-4 py-1 text-xs font-black uppercase shadow-[2px_2px_0_0_#000] active:shadow-none active:translate-y-0.5">
+                            Play
+                        </a>
                     </div>
                 </div>
             @endforeach
