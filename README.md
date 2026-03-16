@@ -2,15 +2,19 @@
 
 A Laravel-based web application for dictionary training through an interactive Hangman game. Features include user registration/login (with Google OAuth), lobby, game creation/playing with challenges, and email verification.
 
-## Prerequisites
+## Quick Setup (Docker Deployment)
 
-- PHP >= 8.2
-- Composer
-- Node.js & npm
-- MySQL (or Docker for MySQL)
-- Optional: Docker Compose
+**Docker Deployment:**
 
-## Quick Setup
+```
+docker compose down && docker compose up --build -d
+```
+
+Wait 60s for DB init. Access http://localhost:8000
+
+**MySQL Access:** localhost:3307 (override), forge/forge, hangman_db
+
+**Or Local Setup (without Docker):**
 
 1. **Run the setup script**:
 
@@ -39,7 +43,7 @@ A Laravel-based web application for dictionary training through an interactive H
     docker compose up -d
     ```
 
-    Starts MySQL container 'hangman' on port 3307.
+    Starts MySQL container on port 3307.
 
 4. **Google OAuth Setup**:
     - Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
